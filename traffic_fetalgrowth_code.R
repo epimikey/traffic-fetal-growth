@@ -24,9 +24,9 @@
 #' @param ins insurance type
 #' @param adi_natrank Area Deprivation Index national percentiles
 #' @param smoking maternal smoking during pregnancy
-#' @param ndlag NO2 lag at a given lag (e.g., "ndlag01" is the NO2 1 week prior to the ultrasound measurement)
-#' @param templag temperature lag at a given lag 
-#' @param pmlag PM2.5 lag at a given lag 
+#' @param ndlag NO2 exposure at a given gestational week (e.g., "ndlag01" is the NO2 value in the first gestational week)
+#' @param templag temperature exposure at a given gestational week
+#' @param pmlag PM2.5 exposure at a given gestational week
 
 
 ###****************************
@@ -44,7 +44,7 @@ for (p in requiredPackages) {
 # 0b. read in analytic datasets
 df.bpd <- readRDS("DIRECTORY/df_bpd.rds") # biparietal diameter ultrasounds
 
-# 0c. set up ultrasound datasets
+# 0c. divide ultrasound datasets based on time of measurement
 df.bpd1 <- df.bpd %>% filter(ga_cat == 1) # 16-23 Week Scan
 df.bpd2 <- df.bpd %>% filter(ga_cat == 2) # 24-31 Week Scan
 df.bpd3 <- df.bpd %>% filter(ga_cat == 3) # 32+ Week Scan
@@ -69,7 +69,7 @@ testAIC <- function(nd_hist, temp_hist, n_df1, data){
 
 ### 1a. Biparietal Diameter
 
-# 1a.i. Join with weekly exposure data
+# 1a.i. join with weekly exposure data
 df.bpd1 <- df.bpd1 %>% 
   left_join(nd.week16, by="baby_mrn") %>% 
   left_join(temp.week16, by="baby_mrn") %>%
@@ -98,7 +98,7 @@ model.bpd1 <- gamm4(zscore ~ cb.nd.bpd1 + cb.temp.bpd1 +
                     random = ~(1|baby_mrn), # random intercept for each fetus
                     data = df.bpd1)$gam
 
-# 1a.v. predictions
+# 1a.v. generate DLM predictions
 pred.bpd1 <- crosspred(cb.nd.bpd1, model.bpd1, at=30, cen=20) # for a 10-ppb contrast
 
 # 1a.vi. extract week-specific estimate & 95% CIs
